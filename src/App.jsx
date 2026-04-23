@@ -621,9 +621,17 @@ export default function App() {
                         transition: "background 0.2s",
                       }}
                     >
-                      <div onClick={() => setEditingExpense(isEditing ? null : item.id)} style={{ cursor: "pointer" }}>
+                      <div
+                        onClick={() => {
+                          if (!isEditing) {
+                            setEditingExpense(item.id);
+                          }
+                        }}
+                        style={{ cursor: isEditing ? "default" : "pointer" }}
+                      >
                         {isEditing ? (
                           <input
+                            autoFocus
                             value={item.name}
                             onChange={(event) => updateExpense(item.id, "name", event.target.value)}
                             style={{
