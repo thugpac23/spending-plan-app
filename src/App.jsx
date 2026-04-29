@@ -72,8 +72,6 @@ const DEFAULT_INCOME = [
   { id: 2, name: "Cashback", amount: 255.65, frequency: "Annual" },
 ];
 
-const STORAGE_KEY = "marto_spending_plan_v2_eur";
-
 function fmt(n) {
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
@@ -81,24 +79,22 @@ function fmt(n) {
   }).format(Math.round(n));
 }
 
-function loadData() {
+async function loadData() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      return JSON.parse(raw);
-    }
+    const res = await fetch("/api/data");
+    if (res.ok) return await res.json();
   } catch {
-    // Ignore storage read errors and fall back to defaults.
+    // Fall back to defaults on network error.
   }
   return null;
 }
 
-function saveData(data) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {
-    // Ignore storage write errors so the app stays usable.
-  }
+async function saveData(data) {
+  await fetch("/api/data", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 }
 
 function DonutChart({ data, total }) {
@@ -160,12 +156,21 @@ function useIsMobile() {
 }
 
 export default function App() {
-  const saved = loadData();
   const isMobile = useIsMobile();
-  const [income, setIncome] = useState(saved?.income || DEFAULT_INCOME);
-  const [expenses, setExpenses] = useState(saved?.expenses || DEFAULT_EXPENSES);
-  const [invest, setInvest] = useState(saved?.invest ?? 204.52);
-  const [emergencyMonths, setEmergencyMonths] = useState(saved?.emergencyMonths ?? 3);
+  const [income, setIncome] = useState(DEFAULT_INCOME);
+  const [expenses, setExpenses] = useState(DEFAULT_EXPENSES);
+  const [invest, setInvest] = useState(204.52);
+  const [emergencyMonths, setEmergencyMonths] = useState(3);
+
+  useEffect(() => {
+    loadData().then((saved) => {
+      if (!saved) return;
+      if (saved.income) setIncome(saved.income);
+      if (saved.expenses) setExpenses(saved.expenses);
+      if (saved.invest != null) setInvest(saved.invest);
+      if (saved.emergencyMonths != null) setEmergencyMonths(saved.emergencyMonths);
+    });
+  }, []);
   const [activeTab, setActiveTab] = useState("overview");
   const [editingIncome, setEditingIncome] = useState(null);
   const [editingExpense, setEditingExpense] = useState(null);
@@ -202,9 +207,10 @@ export default function App() {
   const emergencyTarget = monthlyExpenses * emergencyMonths;
 
   const handleSave = useCallback(() => {
-    saveData({ income, expenses, invest, emergencyMonths });
-    setSavedFlag(true);
-    window.setTimeout(() => setSavedFlag(false), 2000);
+    saveData({ income, expenses, invest, emergencyMonths }).then(() => {
+      setSavedFlag(true);
+      window.setTimeout(() => setSavedFlag(false), 2000);
+    });
   }, [emergencyMonths, expenses, income, invest]);
 
   const updateExpense = (id, field, value) => {
