@@ -789,7 +789,7 @@ export default function App() {
                         padding: "12px 20px",
                         borderBottom: index < filteredExpenses.length - 1 ? "1px solid #F2F2F7" : "none",
                         display: "grid",
-                        gridTemplateColumns: "2fr 1fr 1fr 1fr 40px",
+                        gridTemplateColumns: "2fr 1fr 1fr 1fr auto",
                         gap: 8,
                         alignItems: "center",
                         background: isEditing ? colorSet.bg : "transparent",
@@ -906,24 +906,46 @@ export default function App() {
                           <span style={{ fontSize: 12, color: "#8E8E93" }}>{item.frequency}</span>
                         )}
                       </div>
-                      <button
-                        onClick={() => deleteExpense(item.id)}
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: "50%",
-                          border: "none",
-                          background: "#FFE5E5",
-                          color: "#FF3B30",
-                          cursor: "pointer",
-                          fontSize: 14,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        ×
-                      </button>
+                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        {isEditing && (
+                          <button
+                            onClick={() => { handleSave(); setEditingExpense(null); }}
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: "50%",
+                              border: "none",
+                              background: "#E8FFF0",
+                              color: "#34C759",
+                              cursor: "pointer",
+                              fontSize: 16,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            ✓
+                          </button>
+                        )}
+                        <button
+                          onClick={() => deleteExpense(item.id)}
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: "50%",
+                            border: "none",
+                            background: "#FFE5E5",
+                            color: "#FF3B30",
+                            cursor: "pointer",
+                            fontSize: 14,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -1101,7 +1123,7 @@ export default function App() {
                         padding: "14px 20px",
                         borderBottom: index < income.length - 1 ? "1px solid #F2F2F7" : "none",
                         display: "grid",
-                        gridTemplateColumns: "2fr 1fr 1fr 40px",
+                        gridTemplateColumns: "2fr 1fr 1fr auto",
                         gap: 8,
                         alignItems: "center",
                         background: isEditing ? "#F0FFF4" : "transparent",
@@ -1165,24 +1187,46 @@ export default function App() {
                           <span style={{ fontSize: 13, color: "#8E8E93" }}>{item.frequency}</span>
                         )}
                       </div>
-                      <button
-                        onClick={() => deleteIncome(item.id)}
-                        style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: "50%",
-                          border: "none",
-                          background: "#FFE5E5",
-                          color: "#FF3B30",
-                          cursor: "pointer",
-                          fontSize: 14,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        ×
-                      </button>
+                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        {isEditing && (
+                          <button
+                            onClick={() => { handleSave(); setEditingIncome(null); }}
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: "50%",
+                              border: "none",
+                              background: "#E8FFF0",
+                              color: "#34C759",
+                              cursor: "pointer",
+                              fontSize: 16,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            ✓
+                          </button>
+                        )}
+                        <button
+                          onClick={() => deleteIncome(item.id)}
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: "50%",
+                            border: "none",
+                            background: "#FFE5E5",
+                            color: "#FF3B30",
+                            cursor: "pointer",
+                            fontSize: 14,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
