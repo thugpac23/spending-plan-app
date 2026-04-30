@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const FREQUENCIES = ["Monthly", "Annual", "Weekly", "Quarterly", "Bi-weekly"];
 
@@ -79,14 +79,29 @@ function fmt(n) {
   }).format(Math.round(n));
 }
 
-async function loadData() {
-  const res = await fetch("/api/data");
+const SYNC_KEY = "spending_sync_id";
+
+function getSyncId() {
+  let id = localStorage.getItem(SYNC_KEY);
+  if (!id) {
+    id = Math.random().toString(36).slice(2, 8).toUpperCase();
+    localStorage.setItem(SYNC_KEY, id);
+  }
+  return id;
+}
+
+function setSyncId(id) {
+  localStorage.setItem(SYNC_KEY, id);
+}
+
+async function loadData(id) {
+  const res = await fetch(`/api/data?id=${encodeURIComponent(id)}`);
   if (!res.ok) throw new Error(`API ${res.status}`);
   return await res.json();
 }
 
-async function saveData(data) {
-  await fetch("/api/data", {
+async function saveData(id, data) {
+  await fetch(`/api/data?id=${encodeURIComponent(id)}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -153,15 +168,35 @@ function useIsMobile() {
 
 export default function App() {
   const isMobile = useIsMobile();
+  const [syncId, setSyncIdState] = useState(() => getSyncId());
   const [income, setIncome] = useState(DEFAULT_INCOME);
   const [expenses, setExpenses] = useState(DEFAULT_EXPENSES);
   const [invest, setInvest] = useState(204.52);
   const [emergencyMonths, setEmergencyMonths] = useState(3);
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(null);
+  const [showSync, setShowSync] = useState(false);
+  const [syncInput, setSyncInput] = useState("");
+  const [copied, setCopied] = useState(false);
+  const syncPanelRef = useRef(null);
+
+  const applyNewSyncId = useCallback((id) => {
+    const clean = id.trim().toUpperCase();
+    if (!clean) return;
+    setSyncId(clean);
+    setSyncIdState(clean);
+    setLoaded(false);
+    setLoadError(null);
+    setIncome(DEFAULT_INCOME);
+    setExpenses(DEFAULT_EXPENSES);
+    setInvest(204.52);
+    setEmergencyMonths(3);
+    setSyncInput("");
+    setShowSync(false);
+  }, []);
 
   useEffect(() => {
-    loadData()
+    loadData(syncId)
       .then((saved) => {
         if (saved) {
           if (saved.income) setIncome(saved.income);
@@ -175,7 +210,18 @@ export default function App() {
         setLoadError(err?.message ?? "Failed to load");
         setLoaded(true);
       });
-  }, []);
+  }, [syncId]);
+
+  useEffect(() => {
+    if (!showSync) return;
+    function handleClick(e) {
+      if (syncPanelRef.current && !syncPanelRef.current.contains(e.target)) {
+        setShowSync(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showSync]);
   const [activeTab, setActiveTab] = useState("overview");
   const [editingIncome, setEditingIncome] = useState(null);
   const [editingExpense, setEditingExpense] = useState(null);
@@ -212,12 +258,12 @@ export default function App() {
   const emergencyTarget = monthlyExpenses * emergencyMonths;
 
   const handleSave = useCallback(() => {
-    if (!loaded) return; // Guard against clobbering stored data with defaults before initial load completes.
-    saveData({ income, expenses, invest, emergencyMonths }).then(() => {
+    if (!loaded) return;
+    saveData(syncId, { income, expenses, invest, emergencyMonths }).then(() => {
       setSavedFlag(true);
       window.setTimeout(() => setSavedFlag(false), 2000);
     });
-  }, [emergencyMonths, expenses, income, invest, loaded]);
+  }, [emergencyMonths, expenses, income, invest, loaded, syncId]);
 
   const updateExpense = (id, field, value) => {
     setExpenses((current) =>
@@ -337,16 +383,133 @@ export default function App() {
               </button>
             ))}
           </div>
+          <div style={{ position: "relative" }} ref={syncPanelRef}>
+            <button
+              onClick={() => { setShowSync((v) => !v); setSyncInput(""); }}
+              title="Sync across devices"
+              style={{
+                padding: "7px 14px",
+                borderRadius: 20,
+                border: "1.5px solid #E5E5EA",
+                cursor: "pointer",
+                fontSize: 13,
+                fontWeight: 600,
+                background: showSync ? "#F2F2F7" : "#fff",
+                color: "#3C3C43",
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                alignSelf: isMobile ? "stretch" : "auto",
+              }}
+            >
+              🔗 Sync
+            </button>
+            {showSync && (
+              <div style={{
+                position: "absolute",
+                top: "calc(100% + 10px)",
+                right: 0,
+                background: "#fff",
+                border: "1.5px solid #E5E5EA",
+                borderRadius: 16,
+                padding: 20,
+                width: 280,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                zIndex: 100,
+              }}>
+                <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 700, color: "#1C1C1E" }}>Your sync code</p>
+                <p style={{ margin: "0 0 12px", fontSize: 11, color: "#8E8E93", lineHeight: 1.4 }}>
+                  Share this code with another device to see the same data.
+                </p>
+                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                  <div style={{
+                    flex: 1,
+                    background: "#F2F2F7",
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                    fontSize: 20,
+                    fontWeight: 700,
+                    letterSpacing: 4,
+                    color: "#007AFF",
+                    textAlign: "center",
+                    fontFamily: "monospace",
+                  }}>
+                    {syncId}
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(syncId).then(() => {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      });
+                    }}
+                    style={{
+                      padding: "0 14px",
+                      borderRadius: 10,
+                      border: "none",
+                      cursor: "pointer",
+                      background: copied ? "#34C759" : "#007AFF",
+                      color: "#fff",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      transition: "background 0.2s",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {copied ? "✓" : "Copy"}
+                  </button>
+                </div>
+                <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700, color: "#1C1C1E" }}>Use another code</p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    value={syncInput}
+                    onChange={(e) => setSyncInput(e.target.value.toUpperCase())}
+                    placeholder="Enter code…"
+                    maxLength={10}
+                    style={{
+                      flex: 1,
+                      padding: "9px 12px",
+                      borderRadius: 10,
+                      border: "1.5px solid #E5E5EA",
+                      fontSize: 15,
+                      fontWeight: 700,
+                      letterSpacing: 3,
+                      fontFamily: "monospace",
+                      outline: "none",
+                      textTransform: "uppercase",
+                    }}
+                  />
+                  <button
+                    onClick={() => applyNewSyncId(syncInput)}
+                    disabled={!syncInput.trim()}
+                    style={{
+                      padding: "0 14px",
+                      borderRadius: 10,
+                      border: "none",
+                      cursor: syncInput.trim() ? "pointer" : "default",
+                      background: syncInput.trim() ? "#007AFF" : "#E5E5EA",
+                      color: syncInput.trim() ? "#fff" : "#8E8E93",
+                      fontSize: 12,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={handleSave}
+            disabled={!loaded}
             style={{
               padding: "7px 16px",
               borderRadius: 20,
               border: "none",
-              cursor: "pointer",
+              cursor: loaded ? "pointer" : "default",
               fontSize: 13,
               fontWeight: 600,
-              background: savedFlag ? "#34C759" : "#007AFF",
+              background: savedFlag ? "#34C759" : loaded ? "#007AFF" : "#A0C4FF",
               color: "#fff",
               transition: "all 0.3s",
               display: "flex",
