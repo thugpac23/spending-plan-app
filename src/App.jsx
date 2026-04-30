@@ -80,13 +80,9 @@ function fmt(n) {
 }
 
 async function loadData() {
-  try {
-    const res = await fetch("/api/data");
-    if (res.ok) return await res.json();
-  } catch {
-    // Fall back to defaults on network error.
-  }
-  return null;
+  const res = await fetch("/api/data");
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return await res.json();
 }
 
 async function saveData(data) {
@@ -161,15 +157,24 @@ export default function App() {
   const [expenses, setExpenses] = useState(DEFAULT_EXPENSES);
   const [invest, setInvest] = useState(204.52);
   const [emergencyMonths, setEmergencyMonths] = useState(3);
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
-    loadData().then((saved) => {
-      if (!saved) return;
-      if (saved.income) setIncome(saved.income);
-      if (saved.expenses) setExpenses(saved.expenses);
-      if (saved.invest != null) setInvest(saved.invest);
-      if (saved.emergencyMonths != null) setEmergencyMonths(saved.emergencyMonths);
-    });
+    loadData()
+      .then((saved) => {
+        if (saved) {
+          if (saved.income) setIncome(saved.income);
+          if (saved.expenses) setExpenses(saved.expenses);
+          if (saved.invest != null) setInvest(saved.invest);
+          if (saved.emergencyMonths != null) setEmergencyMonths(saved.emergencyMonths);
+        }
+        setLoaded(true);
+      })
+      .catch((err) => {
+        setLoadError(err?.message ?? "Failed to load");
+        setLoaded(true);
+      });
   }, []);
   const [activeTab, setActiveTab] = useState("overview");
   const [editingIncome, setEditingIncome] = useState(null);
@@ -207,11 +212,12 @@ export default function App() {
   const emergencyTarget = monthlyExpenses * emergencyMonths;
 
   const handleSave = useCallback(() => {
+    if (!loaded) return; // Guard against clobbering stored data with defaults before initial load completes.
     saveData({ income, expenses, invest, emergencyMonths }).then(() => {
       setSavedFlag(true);
       window.setTimeout(() => setSavedFlag(false), 2000);
     });
-  }, [emergencyMonths, expenses, income, invest]);
+  }, [emergencyMonths, expenses, income, invest, loaded]);
 
   const updateExpense = (id, field, value) => {
     setExpenses((current) =>
