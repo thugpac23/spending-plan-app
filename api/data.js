@@ -1,15 +1,16 @@
-import { kv } from "@vercel/kv";
+import Redis from "ioredis";
 
 const KEY = "spending-plan";
+const client = new Redis(process.env.REDIS_URL);
 
 export default async function handler(req, res) {
   try {
     if (req.method === "GET") {
-      const data = await kv.get(KEY);
-      return res.status(200).json(data ?? null);
+      const raw = await client.get(KEY);
+      return res.status(200).json(raw ? JSON.parse(raw) : null);
     }
     if (req.method === "POST") {
-      await kv.set(KEY, req.body);
+      await client.set(KEY, JSON.stringify(req.body));
       return res.status(200).json({ ok: true });
     }
     res.status(405).end();
