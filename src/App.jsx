@@ -33,43 +33,42 @@ const CATEGORY_COLORS = {
 };
 
 const DEFAULT_EXPENSES = [
-  { id: 1, name: "Hot Water", type: "Utilities", category: "Bills", amount: 30.68, frequency: "Monthly" },
-  { id: 2, name: "Electricity Bill", type: "Utilities", category: "Bills", amount: 15.34, frequency: "Monthly" },
-  { id: 3, name: "Internet & TV", type: "Utilities", category: "Bills", amount: 20.45, frequency: "Monthly" },
-  { id: 4, name: "Water Bill & Ent fee", type: "Utilities", category: "Bills", amount: 15.34, frequency: "Monthly" },
-  { id: 5, name: "Petrol", type: "Transport & Auto", category: "Car", amount: 51.13, frequency: "Monthly" },
-  { id: 6, name: "Public Transport", type: "Transport & Auto", category: "Car", amount: 5.11, frequency: "Monthly" },
-  { id: 7, name: "Vignette", type: "Transport & Auto", category: "Car", amount: 46.02, frequency: "Annual" },
-  { id: 8, name: "CBA Card", type: "Transport & Auto", category: "Car", amount: 46.02, frequency: "Annual" },
-  { id: 9, name: "Car Insurance", type: "Transport & Auto", category: "Car", amount: 168.73, frequency: "Annual" },
-  { id: 10, name: "Car Maintenance & Repairs", type: "Transport & Auto", category: "Car", amount: 409.03, frequency: "Annual" },
-  { id: 11, name: "Car Taxes", type: "Transport & Auto", category: "Car", amount: 102.26, frequency: "Annual" },
-  { id: 12, name: "Car Fines", type: "Transport & Auto", category: "Car", amount: 76.69, frequency: "Annual" },
-  { id: 13, name: "Spotify / DuoLingo / MentalUp", type: "Subscriptions", category: "Bills", amount: 112.48, frequency: "Annual" },
-  { id: 14, name: "Clothes / Shoes", type: "Personal", category: "Personal", amount: 306.78, frequency: "Annual" },
-  { id: 15, name: "Computer / Gadgets", type: "Personal", category: "Personal", amount: 15.34, frequency: "Monthly" },
-  { id: 16, name: "Other Purchases", type: "Personal", category: "Personal", amount: 25.56, frequency: "Monthly" },
-  { id: 17, name: "Doctors and Medical", type: "Medical", category: "Medical", amount: 15.34, frequency: "Monthly" },
-  { id: 18, name: "Butcher Shop", type: "Groceries", category: "Food", amount: 40.9, frequency: "Monthly" },
-  { id: 19, name: "Supermarket", type: "Groceries", category: "Food", amount: 153.39, frequency: "Monthly" },
-  { id: 20, name: "Bars / Pub", type: "Entertainment", category: "Entertainment", amount: 51.13, frequency: "Monthly" },
-  { id: 21, name: "Sports", type: "Entertainment", category: "Entertainment", amount: 25.56, frequency: "Monthly" },
-  { id: 22, name: "Cinema", type: "Entertainment", category: "Entertainment", amount: 25.56, frequency: "Quarterly" },
-  { id: 23, name: "Restaurants / Cafes / Take-away", type: "Groceries", category: "Food", amount: 25.56, frequency: "Weekly" },
-  { id: 24, name: "Holidays", type: "Holidays", category: "Holidays", amount: 3067.75, frequency: "Annual" },
-  { id: 25, name: "Child Support", type: "Child", category: "Child", amount: 178.95, frequency: "Monthly" },
-  { id: 26, name: "School", type: "Child", category: "Child", amount: 102.26, frequency: "Annual" },
-  { id: 27, name: "Clothes and Toys", type: "Child", category: "Child", amount: 153.39, frequency: "Annual" },
-  { id: 28, name: "Child Activities", type: "Child", category: "Child", amount: 102.26, frequency: "Monthly" },
-  { id: 29, name: "Trip to Burgas – Petrol", type: "Child", category: "Child", amount: 153.39, frequency: "Monthly" },
-  { id: 30, name: "Trip to Burgas – Apartment", type: "Child", category: "Child", amount: 204.52, frequency: "Monthly" },
-  { id: 31, name: "Lawyers", type: "Child", category: "Child", amount: 3067.75, frequency: "Annual" },
-  { id: 32, name: "Fathers", type: "Personal", category: "Personal", amount: 10.23, frequency: "Monthly" },
+  { id: 1, name: "Hot Water", type: "Utilities", category: "Bills", amount: 0, frequency: "Monthly" },
+  { id: 2, name: "Electricity Bill", type: "Utilities", category: "Bills", amount: 0, frequency: "Monthly" },
+  { id: 3, name: "Internet & TV", type: "Utilities", category: "Bills", amount: 0, frequency: "Monthly" },
+  { id: 4, name: "Water Bill & Ent fee", type: "Utilities", category: "Bills", amount: 0, frequency: "Monthly" },
+  { id: 5, name: "Petrol", type: "Transport & Auto", category: "Car", amount: 0, frequency: "Monthly" },
+  { id: 6, name: "Public Transport", type: "Transport & Auto", category: "Car", amount: 0, frequency: "Monthly" },
+  { id: 7, name: "Vignette", type: "Transport & Auto", category: "Car", amount: 0, frequency: "Annual" },
+  { id: 8, name: "CBA Card", type: "Transport & Auto", category: "Car", amount: 0, frequency: "Annual" },
+  { id: 9, name: "Car Insurance", type: "Transport & Auto", category: "Car", amount: 0, frequency: "Annual" },
+  { id: 10, name: "Car Maintenance & Repairs", type: "Transport & Auto", category: "Car", amount: 0, frequency: "Annual" },
+  { id: 11, name: "Car Taxes", type: "Transport & Auto", category: "Car", amount: 0, frequency: "Annual" },
+  { id: 12, name: "Car Fines", type: "Transport & Auto", category: "Car", amount: 0, frequency: "Annual" },
+  { id: 13, name: "Spotify / DuoLingo / MentalUp", type: "Subscriptions", category: "Bills", amount: 0, frequency: "Annual" },
+  { id: 14, name: "Clothes / Shoes", type: "Personal", category: "Personal", amount: 0, frequency: "Annual" },
+  { id: 15, name: "Computer / Gadgets", type: "Personal", category: "Personal", amount: 0, frequency: "Monthly" },
+  { id: 16, name: "Other Purchases", type: "Personal", category: "Personal", amount: 0, frequency: "Monthly" },
+  { id: 17, name: "Doctors and Medical", type: "Medical", category: "Medical", amount: 0, frequency: "Monthly" },
+  { id: 18, name: "Butcher Shop", type: "Groceries", category: "Food", amount: 0, frequency: "Monthly" },
+  { id: 19, name: "Supermarket", type: "Groceries", category: "Food", amount: 0, frequency: "Monthly" },
+  { id: 20, name: "Bars / Pub", type: "Entertainment", category: "Entertainment", amount: 0, frequency: "Monthly" },
+  { id: 21, name: "Sports", type: "Entertainment", category: "Entertainment", amount: 0, frequency: "Monthly" },
+  { id: 22, name: "Cinema", type: "Entertainment", category: "Entertainment", amount: 0, frequency: "Quarterly" },
+  { id: 23, name: "Restaurants / Cafes / Take-away", type: "Groceries", category: "Food", amount: 0, frequency: "Weekly" },
+  { id: 24, name: "Holidays", type: "Holidays", category: "Holidays", amount: 0, frequency: "Annual" },
+  { id: 25, name: "Child Support", type: "Child", category: "Child", amount: 0, frequency: "Monthly" },
+  { id: 26, name: "School", type: "Child", category: "Child", amount: 0, frequency: "Annual" },
+  { id: 27, name: "Clothes and Toys", type: "Child", category: "Child", amount: 0, frequency: "Annual" },
+  { id: 28, name: "Child Activities", type: "Child", category: "Child", amount: 0, frequency: "Monthly" },
+  { id: 29, name: "Trip to Burgas – Petrol", type: "Child", category: "Child", amount: 0, frequency: "Monthly" },
+  { id: 30, name: "Trip to Burgas – Apartment", type: "Child", category: "Child", amount: 0, frequency: "Monthly" },
+  { id: 31, name: "Lawyers", type: "Child", category: "Child", amount: 0, frequency: "Annual" },
+  { id: 32, name: "Fathers", type: "Personal", category: "Personal", amount: 0, frequency: "Monthly" },
 ];
 
 const DEFAULT_INCOME = [
-  { id: 1, name: "Embassy Pay", amount: 2794.21, frequency: "Monthly" },
-  { id: 2, name: "Cashback", amount: 255.65, frequency: "Annual" },
+  { id: 1, name: "Salary", amount: 0, frequency: "Monthly" },
 ];
 
 function fmt(n) {
@@ -171,7 +170,7 @@ export default function App() {
   const [syncId, setSyncIdState] = useState(() => getSyncId());
   const [income, setIncome] = useState(DEFAULT_INCOME);
   const [expenses, setExpenses] = useState(DEFAULT_EXPENSES);
-  const [invest, setInvest] = useState(204.52);
+  const [invest, setInvest] = useState(0);
   const [emergencyMonths, setEmergencyMonths] = useState(3);
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState(null);
@@ -189,7 +188,7 @@ export default function App() {
     setLoadError(null);
     setIncome(DEFAULT_INCOME);
     setExpenses(DEFAULT_EXPENSES);
-    setInvest(204.52);
+    setInvest(0);
     setEmergencyMonths(3);
     setSyncInput("");
     setShowSync(false);
