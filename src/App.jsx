@@ -71,6 +71,74 @@ const DEFAULT_INCOME = [
   { id: 1, name: "Salary", amount: 0, frequency: "Monthly" },
 ];
 
+function renderMarkdown(text) {
+  // Lightweight inline renderer: handles headings, bullets, bold, and paragraph breaks.
+  const lines = text.split("\n");
+  const nodes = [];
+  let buffer = [];
+  const flushPara = (key) => {
+    if (buffer.length === 0) return;
+    nodes.push(
+      <p key={`p-${key}`} style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.55, color: "#1C1C1E" }}>
+        {renderInline(buffer.join(" "))}
+      </p>,
+    );
+    buffer = [];
+  };
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed) { flushPara(i); continue; }
+    if (trimmed.startsWith("### ")) {
+      flushPara(i);
+      nodes.push(
+        <h3 key={`h-${i}`} style={{ margin: "20px 0 10px", fontSize: 17, fontWeight: 700, color: "#1C1C1E" }}>
+          {trimmed.slice(4)}
+        </h3>,
+      );
+    } else if (trimmed.startsWith("## ")) {
+      flushPara(i);
+      nodes.push(
+        <h2 key={`h-${i}`} style={{ margin: "22px 0 12px", fontSize: 19, fontWeight: 700, color: "#1C1C1E" }}>
+          {trimmed.slice(3)}
+        </h2>,
+      );
+    } else if (/^[-*]\s/.test(trimmed)) {
+      flushPara(i);
+      nodes.push(
+        <div key={`li-${i}`} style={{ display: "flex", gap: 8, margin: "0 0 6px", fontSize: 14, lineHeight: 1.55, color: "#1C1C1E" }}>
+          <span style={{ color: "#007AFF", fontWeight: 700 }}>•</span>
+          <span style={{ flex: 1 }}>{renderInline(trimmed.replace(/^[-*]\s/, ""))}</span>
+        </div>,
+      );
+    } else if (/^\d+\.\s/.test(trimmed)) {
+      flushPara(i);
+      const num = trimmed.match(/^(\d+)\./)[1];
+      nodes.push(
+        <div key={`ol-${i}`} style={{ display: "flex", gap: 8, margin: "0 0 6px", fontSize: 14, lineHeight: 1.55, color: "#1C1C1E" }}>
+          <span style={{ color: "#007AFF", fontWeight: 700, minWidth: 18 }}>{num}.</span>
+          <span style={{ flex: 1 }}>{renderInline(trimmed.replace(/^\d+\.\s/, ""))}</span>
+        </div>,
+      );
+    } else {
+      buffer.push(trimmed);
+    }
+  }
+  flushPara("end");
+  return nodes;
+}
+
+function renderInline(text) {
+  // Bold via **...**
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={idx}>{part.slice(2, -2)}</strong>;
+    }
+    return <span key={idx}>{part}</span>;
+  });
+}
+
 function fmt(n) {
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
@@ -236,6 +304,28 @@ export default function App() {
   const [newIncome, setNewIncome] = useState({ name: "", amount: 0, frequency: "Monthly" });
   const [savedFlag, setSavedFlag] = useState(false);
   const [filterCat, setFilterCat] = useState("All");
+  const [suggestions, setSuggestions] = useState("");
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsError, setSuggestionsError] = useState(null);
+
+  const generateSuggestions = useCallback(async () => {
+    setSuggestionsLoading(true);
+    setSuggestionsError(null);
+    try {
+      const res = await fetch("/api/suggestions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ income, expenses, invest, emergencyMonths }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? `API ${res.status}`);
+      setSuggestions(data.suggestions ?? "");
+    } catch (err) {
+      setSuggestionsError(err?.message ?? "Failed to generate suggestions");
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  }, [income, expenses, invest, emergencyMonths]);
 
   const totalIncome = income.reduce((sum, item) => sum + freqToMonthly(item.amount, item.frequency), 0);
   const totalExpenses = expenses.reduce((sum, item) => sum + freqToMonthly(item.amount, item.frequency), 0);
@@ -362,7 +452,7 @@ export default function App() {
             <span style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.3px" }}>Spending Plan</span>
           </div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {["overview", "expenses", "income"].map((tab) => (
+            {["overview", "expenses", "income", "suggestions"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -1360,6 +1450,68 @@ export default function App() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {activeTab === "suggestions" && (
+          <div style={{ background: "#fff", borderRadius: 16, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, marginBottom: 8 }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1C1C1E" }}>AI Financial Advisor</h2>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: "#8E8E93" }}>
+                  Personalized recommendations from a senior financial advisor, based on your plan.
+                </p>
+              </div>
+              <button
+                onClick={generateSuggestions}
+                disabled={suggestionsLoading || !loaded}
+                style={{
+                  padding: "10px 18px",
+                  borderRadius: 22,
+                  border: "none",
+                  cursor: suggestionsLoading || !loaded ? "default" : "pointer",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  background: suggestionsLoading ? "#A0C4FF" : "#007AFF",
+                  color: "#fff",
+                  transition: "all 0.2s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                {suggestionsLoading ? "✨ Analyzing…" : suggestions ? "🔄 Regenerate" : "✨ Generate Suggestions"}
+              </button>
+            </div>
+
+            {suggestionsError && (
+              <div style={{ marginTop: 16, padding: 14, borderRadius: 10, background: "#FFE5E5", color: "#C00", fontSize: 13 }}>
+                {suggestionsError}
+              </div>
+            )}
+
+            {suggestionsLoading && !suggestions && (
+              <div style={{ marginTop: 24, padding: 32, textAlign: "center", color: "#8E8E93", fontSize: 14 }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>💭</div>
+                Reviewing your spending plan… this usually takes 15–30 seconds.
+              </div>
+            )}
+
+            {!suggestionsLoading && !suggestions && !suggestionsError && (
+              <div style={{ marginTop: 24, padding: 32, textAlign: "center", color: "#8E8E93", fontSize: 14, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>🤔</div>
+                Click <strong>Generate Suggestions</strong> to get personalized advice on optimizing expenses and investment strategy.
+              </div>
+            )}
+
+            {suggestions && (
+              <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid #F2F2F7" }}>
+                {renderMarkdown(suggestions)}
+                <p style={{ marginTop: 24, fontSize: 11, color: "#8E8E93", fontStyle: "italic" }}>
+                  ⚠️ Suggestions are AI-generated and for informational purposes only. Not financial advice. Consult a licensed advisor before making significant financial decisions.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

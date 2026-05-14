@@ -38,6 +38,16 @@ app.post("/api/data", (req, res) => {
   }
 });
 
+app.post("/api/suggestions", async (req, res) => {
+  try {
+    const mod = await import("./api/suggestions.js");
+    await mod.default(req, res);
+  } catch (err) {
+    console.error("[server /api/suggestions]", err);
+    res.status(500).json({ error: err?.message ?? "Internal error" });
+  }
+});
+
 // Serve built frontend in production
 if (process.env.NODE_ENV === "production") {
   const distDir = join(__dirname, "dist");
